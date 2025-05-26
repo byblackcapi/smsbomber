@@ -73,7 +73,9 @@ Bass Mode içerisinde kullanılan bazı servisler:
 **Zeus289**  
 
 forked by 
-[capi](t.me/capiyedek)
+[capi telegram](t.me/capiyedek)
+[capi telegram kanalı](https://t.me/capiyedek_support)
+
 
 ---
 
