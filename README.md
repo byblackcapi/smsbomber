@@ -72,9 +72,10 @@ Bass Mode içerisinde kullanılan bazı servisler:
 
 **Zeus289**  
 
-forked by 
-[capi telegram](t.me/capiyedek)
-[capi telegram kanalı](https://t.me/capiyedek_support)
+### 🍴 Forklayan  
+**Capi**  
+📱 Telegram: [@capiyedek](https://t.me/capiyedek)  
+📢 Kanal: [Capi Destek Kanalı](https://t.me/capiyedek_support)
 
 
 ---
