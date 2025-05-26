@@ -45,7 +45,7 @@ async def start_handler(event):
         "⛔ `/stop` — Durdur\n"
         "ℹ️ `/help` — Yardım menüsü\n"
         "🔧 `/servisler` — Toplam servis sayısı\n\n"
-        "_⚠️ Sadece test içindir, etik kurallara uy._",
+        "_⚠️ Sadece test içindir, etik kurallara uyun._",
         parse_mode='markdown'
     )
 
@@ -88,11 +88,9 @@ async def sms_handler(event):
     # Sayaçları sıfırla
     status_counts[user_id] = {"basarili": 0, "basarisiz": 0}
 
-    # Başlama onayı
-    await event.respond(f"Başlatılıyor: `0{phone}`", parse_mode='markdown')
-    logging.info(f"{user_id} için SMS bombardımanı başladı: 0{phone}")
+    await event.respond(f"SMS gönderimi başlatılıyor: `0{phone}`", parse_mode='markdown')
+    logging.info(f"{user_id} için gönderim başladı: 0{phone}")
 
-    # Servis fonksiyonlarını dinamik olarak al
     send_sms = SendSms(phone, "")
     services = [
         getattr(send_sms, fn)
@@ -100,12 +98,8 @@ async def sms_handler(event):
         if callable(getattr(send_sms, fn)) and not fn.startswith("__")
     ]
 
-    # Durum mesajı (sonra editlenecek)
-    status_msg = await event.respond("```\n╔════════════════════════╗\n"
-                                     "║ Durum bilgisi yükleniyor ║\n"
-                                     "╚════════════════════════╝\n```")
+    status_msg = await event.respond("```\nSMS başlatılıyor...\n```")
 
-    # Spam coroutine
     async def spam():
         try:
             while user_id in active_tasks:
@@ -113,33 +107,31 @@ async def sms_handler(event):
                 futures = [loop.run_in_executor(executor, svc) for svc in services]
                 results = await asyncio.gather(*futures, return_exceptions=True)
 
-                # Sonuçları sayaçlara ekle
                 for r in results:
                     if isinstance(r, Exception):
                         status_counts[user_id]["basarisiz"] += 1
-                    else:
+                    elif r:
                         status_counts[user_id]["basarili"] += 1
+                    else:
+                        status_counts[user_id]["basarisiz"] += 1
 
-                # Metin kutusunu yeniden oluştur
+                # Güncel metin
                 text = (
-                    "______________________\n"
-                    f"Başarılı   [{status_counts[user_id]['basarili']:^5}]\n"
-                    f"Başarısız  [{status_counts[user_id]['basarisiz']:^5}]\n"
-                    f"Su ana kadar başarılı yollanan mesaj [{status_counts[user_id]['basarili']:^5}]\n"
-                    "______________________"
+                    "```\n"
+                    "╔═══════════════════════╗\n"
+                    f"║   ✔ Başarılı:  {status_counts[user_id]['basarili']:>4}   ║\n"
+                    f"║   ❌ Başarısız: {status_counts[user_id]['basarisiz']:>4}   ║\n"
+                    "╚═══════════════════════╝\n```"
                 )
-                # Edit işlem
-                await status_msg.edit(text, parse_mode=None)
 
-                # Konsola da logla
-                logging.info(f"0{phone} → ✔️{status_counts[user_id]['basarili']}, ❌{status_counts[user_id]['basarisiz']}")
+                await status_msg.edit(text, parse_mode='markdown')
 
+                logging.info(f"[+] 0{phone} → ✔️{status_counts[user_id]['basarili']}, ❌{status_counts[user_id]['basarisiz']}")
                 await asyncio.sleep(2)
 
         except asyncio.CancelledError:
-            logging.info(f"{user_id} bombardımanı iptal etti.")
+            logging.info(f"{user_id} gönderimi iptal etti.")
 
-    # Task başlat ve kaydet
     task = asyncio.create_task(spam())
     active_tasks[user_id] = task
 
