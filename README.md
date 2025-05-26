@@ -1,3 +1,4 @@
+
 # 📱 Sınırsız SMS Bomber Aracı
 
 > ⚠️ **Yasal Uyarı:** Bu araç yalnızca eğitim ve test amaçlı geliştirilmiştir. Yetkisiz kullanımı yasal sorunlara yol açabilir. Geliştirici hiçbir sorumluluk kabul etmez.
@@ -16,13 +17,35 @@
 
 ---
 
-## 🛠 Kurulum
+## 🛠️ Kurulum
+
+### 1. 📦 Gerekli Bağımlılıkları Yükleyin
 
 ```bash
 pip install colorama
 ```
 
-`SendSms` sınıfı, `sms.py` dosyasında tanımlanmalıdır.
+### 2. 🧾 Dosya Yapısını Kontrol Edin
+
+Proje dizininizde aşağıdaki dosyaların bulunduğundan emin olun:
+
+- `smsbomber.py`: Ana çalıştırılabilir dosya.
+- `sms.py`: `SendSms` sınıfını içeren dosya.
+
+Eğer `sms.py` dosyası eksikse, [orijinal repodan](https://github.com/zeus289x/smsbomber) temin edebilirsiniz.
+
+### 3. 🚀 Uygulamayı Başlatın
+
+Terminal veya komut istemcisinde proje dizinine gidin ve aşağıdaki komutu çalıştırın:
+
+```bash
+python smsbomber.py
+```
+
+### 4. 📝 Notlar
+
+- Python 3.6 veya üzeri bir sürüm kullanmanız önerilir.
+- Proje, terminal tabanlı bir arayüze sahiptir; bu nedenle terminal veya komut istemcisi üzerinden çalıştırılmalıdır.
 
 ---
 
@@ -70,13 +93,14 @@ Bass Mode içerisinde kullanılan bazı servisler:
 
 ## 👨‍💻 Geliştirici
 
-**Zeus289**  
+**Zeus289**
+
+---
 
 ### 🍴 Forklayan  
 **Capi**  
 📱 Telegram: [@capiyedek](https://t.me/capiyedek)  
 📢 Kanal: [Capi Destek Kanalı](https://t.me/capiyedek_support)
-
 
 ---
 
