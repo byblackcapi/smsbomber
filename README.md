@@ -71,7 +71,9 @@ Bass Mode içerisinde kullanılan bazı servisler:
 ## 👨‍💻 Geliştirici
 
 **Zeus289**  
-Discord: [discord.gg/289](https://discord.gg/289)
+
+forked by 
+[capi](t.me/capiyedek)
 
 ---
 
