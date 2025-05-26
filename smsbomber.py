@@ -18,7 +18,18 @@ status_counts = {}
 
 @dp.message_handler(commands=["start"])
 async def start_handler(message: Message):
-    await message.answer("SMS botuna hoş geldiniz!\nKomutlar:\n/sms <numara>\n/stop\n/help")
+    await message.answer(
+        "🚀 <b>Capi SMS Bomber</b>'a hoş geldin!\n\n"
+        "Bu bot, verilen telefon numarasına çok sayıda SMS gönderimi simüle eder.\n"
+        "⚠️ <b>Bu bir eğitim/deneme projesidir.</b>\n\n"
+        "<b>Kullanabileceğin komutlar:</b>\n"
+        "📲 /sms <telefon> - SMS bombardımanını başlat\n"
+        "⛔ /stop - Gönderimi durdur\n"
+        "ℹ️ /help - Yardım menüsünü göster\n\n"
+        "🔐 Güvenliğin için yalnızca kendi numaralarını dene.\n"
+        "Botu kullanırken lütfen etik kurallara dikkat et!"
+        , parse_mode="HTML"
+    )
 
 @dp.message_handler(commands=["help"])
 async def help_handler(message: Message):
