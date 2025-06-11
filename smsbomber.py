@@ -11,7 +11,7 @@ import logging
 # ——————————————————————
 api_id    = 23350184
 api_hash  = "41f0c2a157268e158f91ab7d59f4fc19"
-bot_token = "7107604320:AAEcx_S-aa8IwW8PiOWcAdNm_dAX0EczFX4"
+bot_token = "token yaz aq "
 
 # ——————————————————————
 #  Log ayarları: konsolda detaylı bilgi
